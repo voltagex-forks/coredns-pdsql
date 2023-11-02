@@ -2,10 +2,11 @@
 package pdsql
 
 import (
-	"github.com/wenerme/coredns-pdsql/pdnsmodel"
 	"net"
 	"strconv"
 	"strings"
+
+	"github.com/wenerme/coredns-pdsql/pdnsmodel"
 
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/request"
@@ -131,14 +132,14 @@ NEXT_ZONE:
 	}
 	var domain pdnsmodel.Domain
 
-	if err := pdb.Limit(1).Find(&domain, "name = ?", name).Error; err != nil {
+	if err := pdb.Limit(1).Find(&domain, "name ILIKE ?", name).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			goto NEXT_ZONE
 		}
 		return nil, err
 	}
 
-	if err := pdb.Find(&redords, "domain_id = ? and ( ? = 'ANY' or type = ? ) and name like '%*%'", domain.ID, typ, typ).Error; err != nil {
+	if err := pdb.Find(&redords, "domain_id = ? and ( ? = 'ANY' or type = ? ) and name ILIKE '%*%'", domain.ID, typ, typ).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
