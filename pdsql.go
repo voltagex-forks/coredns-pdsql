@@ -26,14 +26,14 @@ type PowerDNSGenericSQLBackend struct {
 func (pdb PowerDNSGenericSQLBackend) Name() string { return Name }
 func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 	state := request.Request{W: w, Req: r}
-
+	qname := strings.ToLower(state.QName())
 	a := new(dns.Msg)
 	a.SetReply(r)
 	a.Compress = true
 	a.Authoritative = true
 
 	var records []*pdnsmodel.Record
-	query := pdnsmodel.Record{Name: state.QName(), Type: state.Type(), Disabled: false}
+	query := pdnsmodel.Record{Name: qname, Type: state.Type(), Disabled: false}
 	if query.Name != "." {
 		// remove last dot
 		query.Name = query.Name[:len(query.Name)-1]
@@ -49,7 +49,7 @@ func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.Respons
 			query.Type = "SOA"
 			if pdb.Where(query).Find(&records).Error == nil {
 				rr := new(dns.SOA)
-				rr.Hdr = dns.RR_Header{Name: state.QName(), Rrtype: dns.TypeSOA, Class: state.QClass()}
+				rr.Hdr = dns.RR_Header{Name: qname, Rrtype: dns.TypeSOA, Class: state.QClass()}
 				if ParseSOA(rr, records[0].Content) {
 					a.Extra = append(a.Extra, rr)
 				}
@@ -60,7 +60,7 @@ func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.Respons
 		}
 	} else {
 		if len(records) == 0 {
-			records, err = pdb.SearchWildcard(state.QName(), state.QType())
+			records, err = pdb.SearchWildcard(qname, state.QType())
 			if err != nil {
 				//return dns.RcodeServerFailure, err
 				return dns.RcodeNameError, err
@@ -68,7 +68,7 @@ func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.Respons
 		}
 		for _, v := range records {
 			typ := dns.StringToType[v.Type]
-			hrd := dns.RR_Header{Name: state.QName(), Rrtype: typ, Class: state.QClass(), Ttl: v.Ttl}
+			hrd := dns.RR_Header{Name: qname, Rrtype: typ, Class: state.QClass(), Ttl: v.Ttl}
 			if !strings.HasSuffix(hrd.Name, ".") {
 				hrd.Name += "."
 			}
