@@ -55,13 +55,15 @@ func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.Respons
 				}
 			}
 		} else {
-			return dns.RcodeServerFailure, err
+			//return dns.RcodeServerFailure, err
+			return dns.RcodeNameError, err
 		}
 	} else {
 		if len(records) == 0 {
 			records, err = pdb.SearchWildcard(state.QName(), state.QType())
 			if err != nil {
-				return dns.RcodeServerFailure, err
+				//return dns.RcodeServerFailure, err
+				return dns.RcodeNameError, err
 			}
 		}
 		for _, v := range records {
