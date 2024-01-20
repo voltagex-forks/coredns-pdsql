@@ -2,6 +2,7 @@
 package pdsql
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -26,7 +27,10 @@ type PowerDNSGenericSQLBackend struct {
 func (pdb PowerDNSGenericSQLBackend) Name() string { return Name }
 func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 	state := request.Request{W: w, Req: r}
+	fmt.Printf("qname was %s", state.QName())
 	qname := strings.ToLower(state.QName())
+	fmt.Printf("normalised qname is %s", qname)
+
 	a := new(dns.Msg)
 	a.SetReply(r)
 	a.Compress = true
