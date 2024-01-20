@@ -45,7 +45,6 @@ func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.Respons
 	case dns.TypeANY:
 		query.Type = ""
 	}
-	//	if err := pdb.Find(&redords, "domain_id = ? and ( ? = 'ANY' or type = ? ) and name ILIKE '%*%'", domain.ID, typ, typ).Error; err != nil {
 	if err := pdb.Find(&records, " (type = 'ANY' or type = ? ) and name LIKE ?", query.Type, query.Name).Error; err != nil {
 		//if err := pdb.Where(query).Find(&records).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -144,7 +143,7 @@ NEXT_ZONE:
 		return nil, err
 	}
 
-	if err := pdb.Find(&records, "domain_id = ? and ( ? = 'ANY' or type = ? ) and name ILIKE '%*%'", domain.ID, typ, typ).Error; err != nil {
+	if err := pdb.Find(&records, "domain_id = ? and ( ? = 'ANY' or type = ? ) and name LIKE '%*%'", domain.ID, typ, typ).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
