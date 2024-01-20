@@ -2,7 +2,6 @@
 package pdsql
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 	"strings"
@@ -27,9 +26,8 @@ type PowerDNSGenericSQLBackend struct {
 func (pdb PowerDNSGenericSQLBackend) Name() string { return Name }
 func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 	state := request.Request{W: w, Req: r}
-	fmt.Printf("qname was %s", state.QName())
+
 	qname := strings.ToLower(state.QName())
-	fmt.Printf("normalised qname is %s", qname)
 
 	a := new(dns.Msg)
 	a.SetReply(r)
@@ -48,7 +46,7 @@ func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.Respons
 		query.Type = ""
 	}
 	//	if err := pdb.Find(&redords, "domain_id = ? and ( ? = 'ANY' or type = ? ) and name ILIKE '%*%'", domain.ID, typ, typ).Error; err != nil {
-	if err := pdb.Find(&records, " (type = 'ANY' or type =? ) and name ILIKE '?'", query.Type, query.Name).Error; err != nil {
+	if err := pdb.Find(&records, " (type = 'ANY' or type = ? ) and name LIKE ?", query.Type, query.Name).Error; err != nil {
 		//if err := pdb.Where(query).Find(&records).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			query.Type = "SOA"
@@ -139,7 +137,7 @@ NEXT_ZONE:
 	}
 	var domain pdnsmodel.Domain
 
-	if err := pdb.Limit(1).Find(&domain, "name ILIKE ?", name).Error; err != nil {
+	if err := pdb.Limit(1).Find(&domain, "name LIKE ?", name).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			goto NEXT_ZONE
 		}
