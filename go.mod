@@ -5,10 +5,9 @@ go 1.20
 require (
 	github.com/coredns/caddy v1.1.1
 	github.com/coredns/coredns v1.11.1
-	github.com/danielnilsen/coredns-pdsql v0.0.0-20231102130645-d36858c14254
-	github.com/jinzhu/gorm v1.9.16
 	github.com/miekg/dns v1.1.58
 	golang.org/x/net v0.20.0
+	gorm.io/driver/sqlite v1.5.4
 	gorm.io/gorm v1.25.5
 )
 
@@ -43,5 +42,4 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577 // indirect
 	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
-	gorm.io/driver/sqlite v1.5.4 // indirect
 )
