@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/coredns/caddy"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	_ "gorm.io/driver/sqlite"
 )
 
 func TestSetupPdsql(t *testing.T) {

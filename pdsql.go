@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/danielnilsen/coredns-pdsql/pdnsmodel"
+	"github.com/voltagex-forks/coredns-pdsql/pdnsmodel"
 
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/request"
-	"github.com/jinzhu/gorm"
 	"github.com/miekg/dns"
 	"golang.org/x/net/context"
+	"gorm.io/gorm"
 )
 
 const Name = "pdsql"
@@ -69,9 +69,9 @@ func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.Respons
 		}
 		for _, v := range records {
 			typ := dns.StringToType[v.Type]
-			hrd := dns.RR_Header{Name: qname, Rrtype: typ, Class: state.QClass(), Ttl: v.Ttl}
-			if !strings.HasSuffix(hrd.Name, ".") {
-				hrd.Name += "."
+			hdr := dns.RR_Header{Name: qname, Rrtype: typ, Class: state.QClass(), Ttl: v.Ttl}
+			if !strings.HasSuffix(hdr.Name, ".") {
+				hdr.Name += "."
 			}
 			rr := dns.TypeToRR[typ]()
 
@@ -79,24 +79,24 @@ func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.Respons
 			// this is enough for most query
 			switch rr := rr.(type) {
 			case *dns.SOA:
-				rr.Hdr = hrd
+				rr.Hdr = hdr
 				if !ParseSOA(rr, v.Content) {
 					rr = nil
 				}
 			case *dns.A:
-				rr.Hdr = hrd
+				rr.Hdr = hdr
 				rr.A = net.ParseIP(v.Content)
 			case *dns.AAAA:
-				rr.Hdr = hrd
+				rr.Hdr = hdr
 				rr.AAAA = net.ParseIP(v.Content)
 			case *dns.TXT:
-				rr.Hdr = hrd
+				rr.Hdr = hdr
 				rr.Txt = []string{v.Content}
 			case *dns.NS:
-				rr.Hdr = hrd
+				rr.Hdr = hdr
 				rr.Ns = v.Content
 			case *dns.PTR:
-				rr.Hdr = hrd
+				rr.Hdr = hdr
 				// pdns don't need the dot but when we answer, we need it
 				if strings.HasSuffix(v.Content, ".") {
 					rr.Ptr = v.Content
@@ -121,7 +121,7 @@ func (pdb PowerDNSGenericSQLBackend) ServeDNS(ctx context.Context, w dns.Respons
 	return 0, w.WriteMsg(a)
 }
 
-func (pdb PowerDNSGenericSQLBackend) SearchWildcard(qname string, qtype uint16) (redords []*pdnsmodel.Record, err error) {
+func (pdb PowerDNSGenericSQLBackend) SearchWildcard(qname string, qtype uint16) (records []*pdnsmodel.Record, err error) {
 	// find domain, then find matched sub domain
 	name := qname
 	qnameNoDot := qname[:len(qname)-1]
@@ -142,7 +142,7 @@ NEXT_ZONE:
 		return nil, err
 	}
 
-	if err := pdb.Find(&redords, "domain_id = ? and ( ? = 'ANY' or type = ? ) and name ILIKE '%*%'", domain.ID, typ, typ).Error; err != nil {
+	if err := pdb.Find(&records, "domain_id = ? and ( ? = 'ANY' or type = ? ) and name ILIKE '%*%'", domain.ID, typ, typ).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, nil
 		}
@@ -150,12 +150,12 @@ NEXT_ZONE:
 	}
 	// filter
 	var matched []*pdnsmodel.Record
-	for _, v := range redords {
+	for _, v := range records {
 		if WildcardMatch(qnameNoDot, v.Name) {
 			matched = append(matched, v)
 		}
 	}
-	redords = matched
+	records = matched
 	return
 }
 

@@ -3,12 +3,12 @@ package pdsql
 import (
 	"log"
 
-	"github.com/danielnilsen/coredns-pdsql/pdnsmodel"
-
 	"github.com/coredns/caddy"
 	"github.com/coredns/coredns/core/dnsserver"
 	"github.com/coredns/coredns/plugin"
-	"github.com/jinzhu/gorm"
+	"github.com/voltagex-forks/coredns-pdsql/pdnsmodel"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -30,8 +30,9 @@ func setup(c *caddy.Controller) error {
 		return plugin.Error("pdsql", c.ArgErr())
 	}
 	arg := c.Val()
+	log.Println("setup: {} {}", dialect, arg)
 
-	db, err := gorm.Open(dialect, arg)
+	db, err := gorm.Open(sqlite.Open(":memory:")) //HACK TODO
 	if err != nil {
 		return err
 	}
@@ -75,5 +76,5 @@ func setup(c *caddy.Controller) error {
 }
 
 func (pdb PowerDNSGenericSQLBackend) AutoMigrate() error {
-	return pdb.DB.AutoMigrate(&pdnsmodel.Record{}, &pdnsmodel.Domain{}).Error
+	return pdb.DB.AutoMigrate(&pdnsmodel.Record{}, &pdnsmodel.Domain{})
 }

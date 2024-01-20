@@ -3,19 +3,20 @@ package pdsql_test
 import (
 	"testing"
 
-	pdsql "github.com/danielnilsen/coredns-pdsql"
-	"github.com/danielnilsen/coredns-pdsql/pdnsmodel"
+	pdsql "github.com/voltagex-forks/coredns-pdsql"
+	"github.com/voltagex-forks/coredns-pdsql/pdnsmodel"
 
 	"github.com/coredns/coredns/plugin/pkg/dnstest"
 	"github.com/coredns/coredns/plugin/test"
 
-	"github.com/jinzhu/gorm"
 	"github.com/miekg/dns"
 	"golang.org/x/net/context"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func TestPowerDNSSQL(t *testing.T) {
-	db, err := gorm.Open("sqlite3", ":memory:")
+	db, err := gorm.Open(sqlite.Open(":memory:"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,6 +88,30 @@ func TestWildcardMatch(t *testing.T) {
 		{"a.example.org.", "a.example.org.", true},
 		{"*.example.org.", "a.example.org.", true},
 		{"*.example.org.", "abcd.example.org.", true},
+	}
+
+	for i, tc := range tests {
+		act := pdsql.WildcardMatch(tc.name, tc.pattern)
+		if tc.expected != act {
+			t.Errorf("Test %d: Expected  %v, but got %v", i, tc.expected, act)
+		}
+	}
+}
+
+// TODO: pull out queries into testable functions
+func TestCaseInsensitive(t *testing.T) {
+
+	tests := []struct {
+		pattern  string
+		name     string
+		expected bool
+	}{
+		{"a.exAMple.org.", "a.example.org.", true},
+		{"*.Example.org.", "a.example.org.", true},
+		{"*.example.ORG.", "abcd.example.org.", true},
+		{"a.example.org.", "A.example.org.", true},
+		{"*.example.org.", "a.Example.org.", true},
+		{"*.example.org.", "abcd.example.ORg.", true},
 	}
 
 	for i, tc := range tests {
