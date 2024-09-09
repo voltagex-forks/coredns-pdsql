@@ -8,7 +8,7 @@ require (
 	github.com/miekg/dns v1.1.58
 	golang.org/x/net v0.20.0
 	gorm.io/driver/sqlite v1.5.4
-	gorm.io/gorm v1.25.5
+	gorm.io/gorm v1.25.12
 )
 
 require (
